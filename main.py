@@ -37,3 +37,40 @@ async def get_user(user_id: str):
             status_code=status.HTTP_404_NOT_FOUND
         )
 
+@app.post("/api/v1/tasks")
+async def create_task(title: str, description: str, task_status: str, user_id: str):
+    if user_id not in users:
+        return JSONResponse(
+            content="User not found",
+            status_code=status.HTTP_404_NOT_FOUND
+        )
+
+    task_id = str(uuid.uuid4())
+    task = {
+        "title": title,
+        "description": description,
+        "status": task_status,
+        "user_id": user_id
+    }
+    tasks[task_id] = task
+    return JSONResponse(
+        content={
+            "task_id": task_id,
+            "message": "Task created successfully"
+        },
+        status_code=status.HTTP_201_CREATED
+    )
+
+@app.get("/api/v1/tasks/{user_id}")
+async def list_tasks_by_user(user_id: str):
+    user_tasks = [task for task_id, task in tasks.items() if task["user_id"] == user_id]
+    if not user_tasks:
+        return JSONResponse(
+            content="No tasks found for this user",
+            status_code=status.HTTP_404_NOT_FOUND
+        )
+    return JSONResponse(
+        content=user_tasks,
+        status_code=status.HTTP_200_OK
+    )
+
